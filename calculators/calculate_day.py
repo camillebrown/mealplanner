@@ -2,6 +2,7 @@ import importlib
 
 from config import SUMMARY_DATABASE_ID
 from constants import GOALS, MEALS
+from meal_plans.helpers import flatten_items
 from notion import diff_color, get, patch, post, rt, cell_text, log_cell_changes
 
 def fmt(value):
@@ -93,7 +94,7 @@ def calculate_day(plan_name, day):
         if meal not in meal_plan.get(day, {}):
             continue
 
-        for entry in meal_plan[day][meal]["items"]:
+        for entry in flatten_items(meal_plan[day][meal]["items"]):
             item = build_item(entry)
             for key in totals:
                 totals[key] += item[key]

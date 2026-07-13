@@ -10,7 +10,7 @@ MEAL_PLAN = {
                 {"ingredient": MIXED_BERRIES, "serving": 1},
             ],
         },
-        "Lunch": WILDBIRD_BONELESS_BREAST_MARKETPLACE,
+        "Lunch": WILDBIRD_BONELESS_BREAST_MARKET_PLATE,
         "Dinner": STICKY_SWEET_CHILI_BEEF_BOWL,
         "Snack": RATIO_YOGURT_PARFAIT,
     },
@@ -19,7 +19,7 @@ MEAL_PLAN = {
         "Breakfast": {
             "title": "Breakfast Bake & Apples",
             "items": [
-                *BREAKFAST_BAKE["items"],
+                BREAKFAST_BAKE,
                 {"ingredient": APPLES, "serving": 0.75},
             ],
         },
@@ -32,8 +32,8 @@ MEAL_PLAN = {
             "title": "Stewed Apples with Ratio Yogurt + Protein Coffee",
             "recipe_link": STEWED_APPLES_AND_YOGURT["recipe_link"],
             "items": [
-                *STEWED_APPLES_AND_YOGURT["items"],
-                *PROTEIN_COFFEE["items"],
+                STEWED_APPLES_AND_YOGURT,
+                PROTEIN_COFFEE,
             ],
         },
         "Lunch": TOCAYA_FAJITA_DEL_REY_BOWL_MEAL,

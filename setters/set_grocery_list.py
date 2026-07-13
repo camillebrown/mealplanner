@@ -4,6 +4,7 @@ from fractions import Fraction
 
 from config import SUMMARY_DATABASE_ID
 from notion import get, patch, post, rt
+from meal_plans.helpers import flatten_items
 
 CATEGORIES = [
     "proteins",
@@ -94,7 +95,7 @@ def build_grocery_items(plan_name):
 
     for day_data in meal_plan.values():
         for meal_data in day_data.values():
-            for entry in meal_data["items"]:
+            for entry in flatten_items(meal_data["items"]):
                 ingredient = entry["ingredient"]
 
                 if "restaurant" in ingredient:

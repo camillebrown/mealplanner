@@ -5,9 +5,10 @@ import importlib
 from fractions import Fraction
 
 from calculators.calculate_day import calculate_day
-from config import SUMMARY_DATABASE_ID
+from config import RECIPE_DATABASE_ID, SUMMARY_DATABASE_ID
 from constants import ICONS, MEALS
 from notion import cell_text, get, patch, post
+from meal_plans.helpers import flatten_items, recipe_titles
 
 NON_PLURAL_UNITS = {"g", "kg", "mg", "ml", "oz", "lb"}
 
@@ -80,10 +81,31 @@ def build_item(entry):
         "fiber": fmt(ingredient["fiber"] * serving),
     }
 
-
 def children(block_id):
     return get(f"/blocks/{block_id}/children?page_size=100")["results"]
 
+def find_recipe_page_url(title):
+    data = post(
+        f"/databases/{RECIPE_DATABASE_ID}/query",
+        {
+            "filter": {
+                "property": "Recipe",
+                "title": {
+                    "equals": title,
+                },
+            },
+            "page_size": 2,
+        },
+    )
+
+    results = data.get("results", [])
+
+    if len(results) > 1:
+        raise Exception(
+            f"Multiple recipe pages found with the title '{title}'."
+        )
+
+    return results[0]["url"] if results else None
 
 def find_week():
     data = post(
@@ -168,11 +190,36 @@ def set_meal(plan_name, day, meal):
     meal_table = tables[meal_index]
     meal_data = meal_plan[day][meal]
 
+    nested_recipe_titles = recipe_titles(meal_data["items"])
+
+    recipe_page_title = (
+        nested_recipe_titles[0]
+        if nested_recipe_titles
+        else meal_data["title"]
+    )
+
+    recipe_page_url = find_recipe_page_url(recipe_page_title)
+
+    if recipe_page_url:
+        heading_link = recipe_page_url
+    elif meal_data.get("recipe_link"):
+        heading_link = meal_data["recipe_link"]
+        print(
+            f"⚠️ No Notion recipe page found for "
+            f"'{recipe_page_title}'. Using the source recipe URL."
+        )
+    else:
+        heading_link = None
+        print(
+            f"⚠️ No Notion recipe page found for "
+            f"'{recipe_page_title}'. Meal title will not be linked."
+        )
+
     update_meal_heading(
         meal_heading,
         meal,
         title=meal_data["title"],
-        recipe_link=meal_data.get("recipe_link"),
+        recipe_link=heading_link,
     )
 
     rows = children(meal_table["id"])
@@ -183,7 +230,10 @@ def set_meal(plan_name, day, meal):
     )
 
     ingredient_slots = rows[1:total_index]
-    items = [build_item(entry) for entry in meal_data["items"]]
+    items = [
+    build_item(entry)
+    for entry in flatten_items(meal_data["items"])
+]
 
     if len(items) > len(ingredient_slots):
         raise Exception(

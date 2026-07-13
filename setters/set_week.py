@@ -7,6 +7,7 @@ from setters.set_day import set_day
 from setters.set_meal import load_meal_plan
 from setters.set_grocery_list import update_grocery_list
 from calculators.calculate_week import calculate_week
+from recipes.recipe_actions.apply_recipe_dates import apply_recipe_dates
 
 
 def set_week(plan_name):
@@ -21,6 +22,7 @@ def set_week(plan_name):
 
     week_totals = calculate_week(plan_name)
     grocery_result = update_grocery_list(plan_name)
+    recipe_dates_result = apply_recipe_dates()
     
     return {
         "success": True,
@@ -29,6 +31,7 @@ def set_week(plan_name):
         "count": len(updated),
         "week_totals": week_totals,
         "grocery_result": grocery_result,
+        "recipe_dates_result": recipe_dates_result,
     }
 
 

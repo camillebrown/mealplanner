@@ -57,79 +57,79 @@ mealplanner/
 
 ## New Meal Plan Workflow
 
-### 1. Create a new empty page in Notion
+### 1. Create a blank meal-plan page in Notion
 
-Use the blue "New" button in the Notion UI to create a new meal plan page that will automatically be added to the Summary Database.
+Open the Meal Plans database and use the blue **New** button to create a page from the configured meal-plan template.
+
+Leave the page's title, Start date, and End date empty. The initialization script fills those values automatically.
 
 ---
 
-### 2. Create a new meal plan page
+### 2. Create the weekly meal-plan file
 
 Create a new file inside:
 
-```
+```text
 meal_plans/
 ```
 
+The filename identifies the first day of the week.
+
 Example:
 
+```text
+meal_plans/july_20_2026.py
 ```
-meal_plans/july_13_2026.py
+
+To reuse an existing plan as a starting point:
+
+```bash
+cp meal_plans/july_13_2026.py meal_plans/july_20_2026.py
 ```
 
-Each day should include Breakfast, Lunch, and Dinner with an optional Snack.
+Edit the copied file as needed before populating Notion.
 
-Each meal supports the following properties:
+Each day may include:
 
-| Property | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `title` | ✅ Yes | Display name shown in Notion. | `"Sticky Sweet Chili Beef Bowl"` |
-| `recipe_link` | ❌ No | URL linked from the meal title in Notion. | `"https://..."` |
-| `items` | ✅ Yes | List of ingredients and servings used in the meal. | `[{"ingredient": GROUND_BEEF, "serving": 1}]` |
+- Breakfast
+- Lunch
+- Dinner
+- Snack
 
-Each item within `items` supports:
-
-| Property | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `ingredient` | ✅ Yes | Ingredient object imported from `ingredients.py`. | `GROUND_BEEF` |
-| `serving` | ✅ Yes | Multiplier applied to the ingredient's serving size and macros. Can be a whole number or decimal. | `1`, `0.5`, `2` |
-
-Example structure:
+Recipes can be referenced directly:
 
 ```python
-"Monday": {
+"Saturday": {
+    "Breakfast": BREAKFAST_BURRITO,
+    "Lunch": TURKEY_LETTUCE_WRAPS,
+    "Dinner": BBQ_CHICKEN_FLATBREAD_PIZZA,
+    "Snack": SPICY_ASIAN_CUCUMBER_TUNA_SALAD,
+},
+```
+
+Recipes and individual ingredients can also be combined:
+
+```python
+"Tuesday": {
     "Breakfast": {
-        "title": "Cottage Cheese Breakfast Tacos",
-        "recipe_link": "https://www.tiktok.com/t/ZTSC3Uwxk/",
+        "title": "Breakfast Bake & Apples",
         "items": [
-            {"ingredient": LOW_FAT_COTTAGE_CHEESE, "serving": 4},
-            {"ingredient": LIQUID_EGG_WHITES, "serving": 0.3},
-            ...
+            BREAKFAST_BAKE,
+            {"ingredient": APPLES, "serving": 0.75},
         ],
     },
+},
+```
 
-    "Lunch": {
-        "title": "Wildbird Boneless Breast Marketplace",
-        "items": [
-            {"ingredient": WILDBIRD_BONELESS_BREAST_MARKET_PLATE, "serving": 1},
-        ],
-    },
+Multiple recipes can be combined into one meal:
 
-    "Dinner": {
-        "title": "Sticky Sweet Chili Beef Bowl",
-        "recipe_link": "https://www.tiktok.com/t/ZTSCcuoPK/",
+```python
+"Wednesday": {
+    "Breakfast": {
+        "title": "Stewed Apples with Ratio Yogurt + Protein Coffee",
         "items": [
-            {"ingredient": GROUND_BEEF, "serving": 1},
-            {"ingredient": JASMINE_RICE, "serving": 1},
-            ...
-        ],
-    },
-    "Snack": {
-        "title": "Ratio Yogurt Parfait",
-        "items": [
-            {"ingredient": PROTEIN_YOGURT, "serving": 1},
-            {"ingredient": KIWIS, "serving": 1},
-            ...
+            STEWED_APPLES_AND_YOGURT,
+            PROTEIN_COFFEE,
         ],
     },
 },
@@ -137,77 +137,112 @@ Example structure:
 
 ---
 
-### 3. Initialize the new Notion meal plan page
+### 3. Initialize the blank Notion page
+
+Run:
 
 ```bash
-python3 initialize_new_page.py 2026-07-13
+python3 initialize_new_page.py july_20_2026
 ```
 
-> 💡 **NOTE**:
-> The date passed to `initialize_new_page.py` **must be the first day of the meal plan week** (typically Monday).
->
-> The script automatically:
-> - Calculates the remaining 6 days of the week.
-> - Names the Notion page (e.g. **July 13–19, 2026**).
-> - Sets the page's **Start** and **End** dates.
-> - Creates the page in the Summary database from the configured Notion template.
+The argument must match the meal-plan filename without `.py`.
+
+For example:
+
+```text
+meal_plans/july_20_2026.py
+```
+
+uses:
+
+```bash
+python3 initialize_new_page.py july_20_2026
+```
+
+The script automatically:
+
+- Verifies that the meal-plan file exists.
+- Finds the newest blank page in the Meal Plans database.
+- Derives the start date from the meal-plan name.
+- Calculates the remaining six days of the week.
+- Sets the page title.
+- Sets the Start and End dates.
 
 ---
 
-### 4. Choose your population strategy
+### 4. Choose how much of the plan to populate
 
-Depending on how you're planning your meals, you can populate a single meal, an entire day, or the entire week.
+#### Populate one meal
 
-#### Option 1 — Populate a Single Meal
-
-Use this while actively planning or tweaking an individual meal.
+Use this while creating or changing one meal:
 
 ```bash
-python3 -m setters.set_meal july_13_2026 Monday Breakfast
+python3 -m setters.set_meal july_20_2026 Monday Breakfast
 ```
 
-Automatically updates:
+This updates:
 
-- Meal heading and recipe link
-- Meal ingredients
+- Meal heading
+- Recipe-page link
+- Ingredients
 - Meal totals
 - Daily totals
 
 ---
 
-#### Option 2 — Populate a Single Day
+#### Populate one day
 
-Use this after finishing all meals for a day.
+Use this after completing all meals for one day:
 
 ```bash
-python3 -m setters.set_day july_13_2026 Monday
+python3 -m setters.set_day july_20_2026 Monday
 ```
 
-Automatically updates:
+This updates:
 
-- All meals for the day
+- Every meal for the selected day
 - Daily totals
 - Weekly totals and averages
 - Grocery list
 
-Meals omitted from the meal plan (such as an optional Snack), automatically clean up that meal's table in the Notion page.
+An omitted meal, such as Snack, keeps its section and table in Notion. The script clears unused ingredient rows and resets that meal's total.
 
 ---
 
-#### Option 3 — Populate the Entire Week
+#### Populate the full week
 
-Use this after completing the full meal plan.
+Use this after the entire weekly plan is ready:
 
 ```bash
-python3 -m setters.set_week july_13_2026
+python3 -m setters.set_week july_20_2026
 ```
 
-Automatically updates:
+This updates:
 
 - Every meal
 - Every day
+- Recipe-page links
+- Daily totals
 - Weekly totals and averages
 - Grocery list
+- Recipe Last Planned and Next Planned dates
+
+---
+
+### Initialize and populate the full week in one command
+
+Once the meal-plan file is complete and a blank Notion page exists, run:
+
+```bash
+python3 initialize_and_fill_week.py july_20_2026
+```
+
+This is equivalent to running:
+
+```bash
+python3 initialize_new_page.py july_20_2026
+python3 -m setters.set_week july_20_2026
+```
 
 ---
 
@@ -247,6 +282,16 @@ Updates:
 - Daily totals
 - Weekly averages
 - Difference tables
+
+### Apply Recipe Dates
+
+Recalculates the **Last Planned** and **Next Planned** properties in the Recipe Database from every file in `meal_plans/`.
+
+```bash
+python3 -m recipes.recipe_actions.apply_recipe_dates
+```
+
+This normally runs automatically at the end of `set_week`, but it can also be run independently after renaming, copying, or editing meal-plan files.
 
 ---
 
