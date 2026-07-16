@@ -1,10 +1,12 @@
-import json
-import re
-
-from recipes.generators.helpers import (
+from recipes.generators.helpers.ingredient_matching import (
     classify_ingredient_names,
 )
 
+from recipes.generators.helpers.transform_to_python import (
+    title_to_python_constant,
+    format_serving,
+    python_string,
+)
 
 def empty_notion_object():
     """
@@ -48,118 +50,7 @@ def empty_extracted_recipe_output():
         },
     }
 
-
-def build_notion_recipe(
-    recipe,
-    source,
-    recipe_link,
-    image_url="",
-    target_servings=1,
-    notes=None,
-):
-    """
-    Builds the final imported-recipe report from standardized recipe data.
-
-    Args:
-        recipe: Standardized parsed recipe fields.
-        source: Recipe source, such as "tiktok" or "website".
-        recipe_link: Original recipe URL.
-        image_url: Source image URL.
-        target_servings: Desired number of servings.
-        notes: Optional notes for the generated recipe.
-
-    Returns:
-        dict: Recipe fields and ingredient classification results.
-    """
-    source_servings = recipe.get("servings")
-
-    result = empty_extracted_recipe_output()
-
-    result["recipe"].update(
-        {
-            "title": recipe.get("title", ""),
-            "source": source,
-            "recipe_link": recipe_link,
-            "image_url": (
-                image_url
-                or recipe.get("image_url", "")
-            ),
-            "overview": recipe.get("overview", ""),
-            "prep_time": recipe.get("prep_time"),
-            "cook_time": recipe.get("cook_time"),
-            "servings": target_servings,
-            "instructions": recipe.get(
-                "instructions",
-                [],
-            ),
-            "notes": notes or [],
-        }
-    )
-
-    result["ingredients"] = classify_ingredient_names(
-        recipe.get("ingredients", []),
-        source_servings,
-        target_servings,
-    )
-
-    return result
-
-
-def constant_name(title):
-    """
-    Converts a recipe title into a Python constant name.
-
-    Args:
-        title: Recipe title.
-
-    Returns:
-        str: Uppercase underscore-separated constant name.
-    """
-    value = re.sub(
-        r"[^A-Za-z0-9]+",
-        "_",
-        title.upper(),
-    )
-
-    return value.strip("_") or "UNTITLED_RECIPE"
-
-
-def python_string(value):
-    """
-    Formats a value as a valid Python string literal.
-
-    Args:
-        value: Value to format.
-
-    Returns:
-        str: JSON-compatible Python string literal.
-    """
-    return json.dumps(
-        str(value),
-        ensure_ascii=False,
-    )
-
-
-def format_serving(value):
-    """
-    Formats a serving multiplier without unnecessary decimal zeros.
-
-    Args:
-        value: Serving multiplier.
-
-    Returns:
-        str: Formatted serving value.
-    """
-    if (
-        isinstance(value, float)
-        and value.is_integer()
-    ):
-        return str(int(value))
-
-    return str(value)
-
-
-def render_import_report(report):
+def build_python_recipe_config(report):
     """
     Renders an imported-recipe report as paste-ready Python code.
 
@@ -174,7 +65,7 @@ def render_import_report(report):
     recipe = report["recipe"]
     ingredients = report["ingredients"]
 
-    name = constant_name(recipe["title"])
+    name = title_to_python_constant(recipe["title"])
 
     lines = [
         f"{name} = {{",
@@ -275,3 +166,58 @@ def render_import_report(report):
         lines.append("")
 
     return "\n".join(lines)
+
+def build_notion_recipe(
+    recipe,
+    source,
+    recipe_link,
+    image_url="",
+    target_servings=1,
+    notes=None,
+):
+    """
+    Builds the final imported-recipe report from standardized recipe data.
+
+    Args:
+        recipe: Standardized parsed recipe fields.
+        source: Recipe source, such as "tiktok" or "website".
+        recipe_link: Original recipe URL.
+        image_url: Source image URL.
+        target_servings: Desired number of servings.
+        notes: Optional notes for the generated recipe.
+
+    Returns:
+        str: Editable Python recipe draft and ingredient review notes.
+    """
+    source_servings = recipe.get("servings")
+
+    result = empty_extracted_recipe_output()
+
+    result["recipe"].update(
+        {
+            "title": recipe.get("title", ""),
+            "source": source,
+            "recipe_link": recipe_link,
+            "image_url": (
+                image_url
+                or recipe.get("image_url", "")
+            ),
+            "overview": recipe.get("overview", ""),
+            "prep_time": recipe.get("prep_time"),
+            "cook_time": recipe.get("cook_time"),
+            "servings": target_servings,
+            "instructions": recipe.get(
+                "instructions",
+                [],
+            ),
+            "notes": notes or [],
+        }
+    )
+
+    result["ingredients"] = classify_ingredient_names(
+        recipe.get("ingredients", []),
+        source_servings,
+        target_servings,
+    )
+
+    return build_python_recipe_config(result)
