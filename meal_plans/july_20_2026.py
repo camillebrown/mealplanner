@@ -1,4 +1,4 @@
-from recipes.recipes_list import *
+from recipes.meal_types.index import *
 
 MEAL_PLAN = {
     "Monday": {

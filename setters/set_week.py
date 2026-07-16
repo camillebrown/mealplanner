@@ -7,7 +7,7 @@ from setters.set_day import set_day
 from setters.set_meal import load_meal_plan
 from setters.set_grocery_list import update_grocery_list
 from calculators.calculate_week import calculate_week
-from recipes.recipe_actions.apply_recipe_dates import apply_recipe_dates
+from recipes.generators.apply_recipe_dates import apply_recipe_dates
 
 
 def set_week(plan_name):

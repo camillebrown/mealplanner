@@ -18,10 +18,10 @@ GOALS = {
 }
 
 GROCERY_CATEGORIES = [
-    "proteins",
     "dairy",
     "frozen products",
     "grains & starches",
-    "produce",
     "pantry, canned goods & condiments",
+    "produce",
+    "proteins",
 ]
